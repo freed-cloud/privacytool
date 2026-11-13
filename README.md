@@ -8,7 +8,12 @@ Een gratis webtool waarmee je in vier stappen terugvindt wat er online over je b
 Door de vele datalekken en hacks liggen persoonsgegevens steeds vaker op straat. Veel mensen weten niet dat ze via de AVG het recht hebben om hun gegevens in te zien en te laten verwijderen, of hoe ze dat moeten doen. Deze tool maakt dat eenvoudig.
 
 ## Wat het doet
-1. **Zoek jezelf** – maakt gerichte Google-zoekopdrachten op naam, woonplaats, e-mail en telefoonnummer.
+1. **Deep scan** – maakt van je gegevens tientallen tot honderden gerichte zoekopdrachten:
+   - Google, Bing en DuckDuckGo, met elke schrijfwijze van je naam (initialen, met en zonder tussenvoegsel, achternaam eerst, andere namen)
+   - meerdere woonplaatsen, e-mailadressen, telefoonnummers (in alle notaties), gebruikersnamen en werkgevers
+   - Nederlandse personenzoekers en gegevenshandelaren, bedrijvengidsen en de KvK
+   - sociale media, documenten (pdf, Word, Excel), overheidssites, afbeeldingen en nieuws
+   - een checklist met voortgang: markeer per zoekopdracht *Niets* of *Gevonden*, en maak bij een vondst direct een verwijderverzoek
 2. **Check datalekken** – verwijst naar Have I Been Pwned en geeft concrete stappen als je in een lek zit.
 3. **Schrijf je verzoek** – genereert een AVG-brief voor inzage (art. 15) en/of verwijdering (art. 17), klaar om te kopiëren of te mailen.
 4. **Volg je verzoeken** – houdt bij wanneer je iets hebt verstuurd en markeert verzoeken waarvan de wettelijke termijn van één maand is verlopen.
