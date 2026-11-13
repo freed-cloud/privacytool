@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vergeet Mij – zoek en verwijder je eigen gegevens</title>
+<meta name="description" content="Gratis tool om je eigen gegevens online te vinden en bij bedrijven te laten verwijderen met een AVG-verzoek. Alles blijft in je eigen browser.">
+<style>
+  :root{
+    --bg:#f6f7f4; --card:#ffffff; --ink:#1d2321; --muted:#5c6763; --line:#dde2de;
+    --accent:#1f6f5c; --accent-2:#e7f2ee; --warn:#8a4b0f; --warn-bg:#fbf1e6;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+  header{background:var(--ink);color:#fff;padding:2.5rem 1.25rem 2rem}
+  header .wrap{max-width:880px;margin:0 auto}
+  header h1{margin:0 0 .4rem;font-size:2rem;letter-spacing:-.02em}
+  header p{margin:0;color:#c9d3cf;max-width:620px}
+  .badge{display:inline-block;margin-top:1rem;font-size:.85rem;background:#2c3532;color:#bfe3d6;padding:.3rem .7rem;border-radius:99px}
+  main{max-width:880px;margin:0 auto;padding:1.5rem 1.25rem 4rem}
+  nav.steps{display:flex;gap:.5rem;flex-wrap:wrap;margin:0 0 1.5rem}
+  nav.steps button{border:1px solid var(--line);background:var(--card);padding:.55rem .9rem;border-radius:8px;cursor:pointer;font:inherit;color:var(--ink)}
+  nav.steps button.active{background:var(--accent);border-color:var(--accent);color:#fff}
+  section.step{display:none;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:1.5rem}
+  section.step.active{display:block}
+  h2{margin-top:0;font-size:1.35rem}
+  label{display:block;font-weight:600;margin:.9rem 0 .3rem;font-size:.95rem}
+  input,select,textarea{width:100%;padding:.6rem .7rem;border:1px solid var(--line);border-radius:8px;font:inherit;background:#fff}
+  textarea{min-height:320px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.9rem}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:0 1rem}
+  @media(max-width:640px){.row{grid-template-columns:1fr}}
+  .btn{display:inline-block;background:var(--accent);color:#fff;border:0;padding:.65rem 1.1rem;border-radius:8px;font:inherit;cursor:pointer;text-decoration:none;margin:.8rem .4rem 0 0}
+  .btn.secondary{background:var(--accent-2);color:var(--accent)}
+  .note{background:var(--accent-2);border-radius:8px;padding:.8rem 1rem;font-size:.93rem;margin:1rem 0}
+  .note.warn{background:var(--warn-bg);color:var(--warn)}
+  ul.links{padding-left:1.1rem}
+  ul.links li{margin:.35rem 0}
+  a{color:var(--accent)}
+  table{width:100%;border-collapse:collapse;margin-top:1rem;font-size:.93rem}
+  th,td{text-align:left;padding:.55rem .5rem;border-bottom:1px solid var(--line);vertical-align:top}
+  td.late{color:#a3261b;font-weight:600}
+  .small{font-size:.85rem;color:var(--muted)}
+  footer{max-width:880px;margin:0 auto;padding:0 1.25rem 3rem;color:var(--muted);font-size:.85rem}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <h1>Vergeet Mij</h1>
+    <p>Zoek op wat er online over je bekend is en vraag bedrijven je gegevens te verwijderen. In vier stappen, gratis, zonder account.</p>
+    <span class="badge">🔒 Alles blijft in je eigen browser. Er wordt niets verstuurd of opgeslagen op een server.</span>
+  </div>
+</header>
+
+<main>
+  <nav class="steps" aria-label="Stappen">
+    <button data-step="1" class="active">1. Zoek jezelf</button>
+    <button data-step="2">2. Check datalekken</button>
+    <button data-step="3">3. Schrijf je verzoek</button>
+    <button data-step="4">4. Volg je verzoeken</button>
+  </nav>
+
+  <!-- STAP 1 -->
+  <section class="step active" id="step-1">
+    <h2>Stap 1: Zoek op wat er over je online staat</h2>
+    <p>Vul in wat je wilt controleren. De tool maakt gerichte zoekopdrachten die je in een nieuw tabblad opent.</p>
+    <div class="row">
+      <div><label for="s-name">Volledige naam</label><input id="s-name" placeholder="Jan Jansen"></div>
+      <div><label for="s-city">Woonplaats (optioneel)</label><input id="s-city" placeholder="Venlo"></div>
+      <div><label for="s-email">E-mailadres (optioneel)</label><input id="s-email" type="email" placeholder="jan@voorbeeld.nl"></div>
+      <div><label for="s-phone">Telefoonnummer (optioneel)</label><input id="s-phone" placeholder="0612345678"></div>
+    </div>
+    <button class="btn" id="make-searches">Maak zoekopdrachten</button>
+    <ul class="links" id="search-links"></ul>
+    <div class="note">Tip: Google heeft een eigen functie om zoekresultaten met je persoonsgegevens te laten verwijderen: <a href="https://myactivity.google.com/results-about-you" target="_blank" rel="noopener">Resultaten over jou</a>.</div>
+  </section>
+
+  <!-- STAP 2 -->
+  <section class="step" id="step-2">
+    <h2>Stap 2: Check of je in een datalek zit</h2>
+    <p>Bij een datalek kunnen je e-mailadres en wachtwoord op straat liggen. Controleer dat op deze betrouwbare sites:</p>
+    <ul class="links">
+      <li><a href="https://haveibeenpwned.com/" target="_blank" rel="noopener">Have I Been Pwned</a>: vul je e-mailadres in en zie in welke bekende datalekken het voorkomt.</li>
+      <li><a href="https://www.autoriteitpersoonsgegevens.nl/themas/beveiliging/datalekken" target="_blank" rel="noopener">Autoriteit Persoonsgegevens over datalekken</a>: wat je rechten zijn als een bedrijf je gegevens lekt.</li>
+    </ul>
+    <h3>Zit je in een lek? Doe dit meteen</h3>
+    <ol>
+      <li>Verander het wachtwoord van dat account, en overal waar je hetzelfde wachtwoord gebruikte.</li>
+      <li>Zet tweestapsverificatie aan.</li>
+      <li>Wees extra alert op phishing-mails en sms'jes die je naam of gegevens noemen.</li>
+      <li>Ga naar stap 3 en vraag het bedrijf welke gegevens het van je heeft.</li>
+    </ol>
+  </section>
+
+  <!-- STAP 3 -->
+  <section class="step" id="step-3">
+    <h2>Stap 3: Schrijf je AVG-verzoek</h2>
+    <p>Op grond van de AVG mag je een bedrijf vragen welke gegevens het van je heeft (inzage) en die laten verwijderen (recht op vergetelheid).</p>
+    <label for="r-type">Soort verzoek</label>
+    <select id="r-type">
+      <option value="delete">Verwijderen (artikel 17 AVG)</option>
+      <option value="access">Inzage (artikel 15 AVG)</option>
+      <option value="both">Inzage én daarna verwijderen</option>
+    </select>
+    <div class="row">
+      <div><label for="r-company">Naam bedrijf</label><input id="r-company" placeholder="Voorbeeld B.V."></div>
+      <div><label for="r-to">E-mailadres privacy-afdeling bedrijf</label><input id="r-to" type="email" placeholder="privacy@bedrijf.nl"></div>
+      <div><label for="r-name">Jouw naam</label><input id="r-name"></div>
+      <div><label for="r-email">Jouw e-mailadres (zoals bekend bij het bedrijf)</label><input id="r-email" type="email"></div>
+    </div>
+    <label for="r-extra">Extra informatie om je te herkennen (optioneel)</label>
+    <input id="r-extra" placeholder="Bijv. klantnummer, gebruikersnaam of oud adres">
+    <p class="small">Het e-mailadres van de privacy-afdeling staat meestal in de privacyverklaring van het bedrijf (zoek op "privacyverklaring" + bedrijfsnaam).</p>
+    <button class="btn" id="make-letter">Maak brief</button>
+    <div id="letter-box" hidden>
+      <label for="letter">Je brief (je kunt hem nog aanpassen)</label>
+      <textarea id="letter"></textarea>
+      <button class="btn" id="copy-letter">Kopieer</button>
+      <a class="btn secondary" id="mail-letter" href="#">Open in mailprogramma</a>
+      <button class="btn secondary" id="track-letter">Zet in mijn overzicht</button>
+      <div class="note warn">Stuur geen kopie van je identiteitsbewijs mee, tenzij het bedrijf daar echt om vraagt en je twijfelt wie je bent. Doe je het toch, maak dan je BSN en pasfoto onzichtbaar (bijv. met de KopieID-app van de Rijksoverheid).</div>
+    </div>
+  </section>
+
+  <!-- STAP 4 -->
+  <section class="step" id="step-4">
+    <h2>Stap 4: Volg je verzoeken</h2>
+    <p>Een bedrijf moet binnen <strong>één maand</strong> reageren. Bij complexe verzoeken mag dat met twee maanden worden verlengd, maar dan moet het bedrijf je dat binnen de eerste maand laten weten.</p>
+    <table>
+      <thead><tr><th>Bedrijf</th><th>Soort</th><th>Verstuurd</th><th>Uiterlijk antwoord</th><th>Status</th><th></th></tr></thead>
+      <tbody id="tracker"><tr><td colspan="6" class="small">Nog geen verzoeken. Maak er een in stap 3.</td></tr></tbody>
+    </table>
+    <div class="note">Geen of een onvoldoende antwoord? Je kunt een klacht indienen bij de <a href="https://www.autoriteitpersoonsgegevens.nl/" target="_blank" rel="noopener">Autoriteit Persoonsgegevens</a>.</div>
+    <p class="small" id="storage-note">Je overzicht wordt alleen in deze browser bewaard.</p>
+  </section>
+</main>
+
+<footer>
+  Gemaakt door Freddy als open-sourceproject. Dit is geen juridisch advies. Broncode op GitHub.
+</footer>
+
+<script>
+(function(){
+  // ---------- Navigatie ----------
+  const buttons = document.querySelectorAll('nav.steps button');
+  function show(n){
+    buttons.forEach(b => b.classList.toggle('active', b.dataset.step == n));
+    document.querySelectorAll('section.step').forEach(s => s.classList.toggle('active', s.id === 'step-' + n));
+  }
+  buttons.forEach(b => b.addEventListener('click', () => show(b.dataset.step)));
+
+  const $ = id => document.getElementById(id);
+  const val = id => $(id).value.trim();
+
+  // ---------- Stap 1: zoekopdrachten ----------
+  $('make-searches').addEventListener('click', () => {
+    const name = val('s-name'), city = val('s-city'), email = val('s-email'), phone = val('s-phone');
+    const list = $('search-links');
+    list.innerHTML = '';
+    const queries = [];
+    if (name) {
+      queries.push(['Je naam', `"${name}"`]);
+      if (city) queries.push(['Naam + woonplaats', `"${name}" "${city}"`]);
+      queries.push(['Naam op sociale media', `"${name}" site:linkedin.com OR site:facebook.com OR site:instagram.com`]);
+      queries.push(['Naam in documenten', `"${name}" filetype:pdf`]);
+    }
+    if (email) queries.push(['Je e-mailadres', `"${email}"`]);
+    if (phone) queries.push(['Je telefoonnummer', `"${phone}"`]);
+    if (!queries.length) { list.innerHTML = '<li>Vul minimaal je naam in.</li>'; return; }
+    queries.forEach(([label, q]) => {
+      const li = document.createElement('li');
+      const a = document.createElement('a');
+      a.href = 'https://www.google.com/search?q=' + encodeURIComponent(q);
+      a.target = '_blank'; a.rel = 'noopener';
+      a.textContent = label + ': ' + q;
+      li.appendChild(a); list.appendChild(li);
+    });
+  });
+
+  // ---------- Stap 3: brief ----------
+  function today(){ return new Date().toLocaleDateString('nl-NL', {day:'numeric', month:'long', year:'numeric'}); }
+
+  function buildLetter(){
+    const type = $('r-type').value, company = val('r-company') || '[bedrijf]', name = val('r-name') || '[jouw naam]',
+          email = val('r-email') || '[jouw e-mailadres]', extra = val('r-extra');
+    const subject = {
+      delete: 'Verzoek tot verwijdering van persoonsgegevens (art. 17 AVG)',
+      access: 'Verzoek om inzage in persoonsgegevens (art. 15 AVG)',
+      both: 'Verzoek om inzage en verwijdering van persoonsgegevens (art. 15 en 17 AVG)'
+    }[type];
+
+    let body = `Geachte heer/mevrouw,\n\n`;
+    if (type === 'access' || type === 'both') {
+      body += `Op grond van artikel 15 van de Algemene Verordening Gegevensbescherming (AVG) verzoek ik ${company} om mij te laten weten of u persoonsgegevens van mij verwerkt. Zo ja, dan ontvang ik graag:\n` +
+        `- een kopie van alle persoonsgegevens die u van mij heeft;\n` +
+        `- de doelen waarvoor u deze gegevens gebruikt;\n` +
+        `- met wie u deze gegevens heeft gedeeld;\n` +
+        `- hoe lang u deze gegevens bewaart;\n` +
+        `- waar u deze gegevens vandaan heeft, als u ze niet van mij zelf heeft gekregen.\n\n`;
+    }
+    if (type === 'delete' || type === 'both') {
+      body += (type === 'both' ? `Daarnaast verzoek ik u` : `Op grond van artikel 17 van de Algemene Verordening Gegevensbescherming (AVG) verzoek ik u`) +
+        ` om alle persoonsgegevens die u van mij verwerkt te verwijderen. Heeft u mijn gegevens met anderen gedeeld, dan verzoek ik u hen op de hoogte te brengen van dit verzoek (artikel 19 AVG). Bent u wettelijk verplicht bepaalde gegevens te bewaren, laat mij dan weten om welke gegevens het gaat en op grond van welke verplichting.\n\n`;
+    }
+    body += `Om mij te kunnen herkennen:\n- Naam: ${name}\n- E-mailadres: ${email}\n` + (extra ? `- Overig: ${extra}\n` : '') + `\n`;
+    body += `Volgens artikel 12 lid 3 AVG dient u binnen één maand na ontvangst op dit verzoek te reageren. Ik ontvang graag een bevestiging van ontvangst.\n\n` +
+      `Met vriendelijke groet,\n\n${name}\n${today()}`;
+    return {subject, body};
+  }
+
+  let current = null;
+  $('make-letter').addEventListener('click', () => {
+    current = buildLetter();
+    $('letter').value = 'Onderwerp: ' + current.subject + '\n\n' + current.body;
+    $('letter-box').hidden = false;
+    updateMailLink();
+  });
+  function updateMailLink(){
+    const text = $('letter').value.replace(/^Onderwerp:.*\n\n/, '');
+    $('mail-letter').href = 'mailto:' + encodeURIComponent(val('r-to')) + '?subject=' + encodeURIComponent(current.subject) + '&body=' + encodeURIComponent(text);
+  }
+  $('letter').addEventListener('input', updateMailLink);
+  $('r-to').addEventListener('input', () => current && updateMailLink());
+  $('copy-letter').addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText($('letter').value); $('copy-letter').textContent = 'Gekopieerd ✓'; }
+    catch(e){ $('letter').select(); document.execCommand('copy'); $('copy-letter').textContent = 'Gekopieerd ✓'; }
+    setTimeout(() => $('copy-letter').textContent = 'Kopieer', 2000);
+  });
+
+  // ---------- Stap 4: tracker ----------
+  const KEY = 'vergeetmij-verzoeken';
+  let memory = [];
+  function load(){ try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch(e){ $('storage-note').textContent = 'Opslaan lukt niet in deze browser; je overzicht verdwijnt als je de pagina sluit.'; return memory; } }
+  function save(list){ memory = list; try { localStorage.setItem(KEY, JSON.stringify(list)); } catch(e){} }
+  const typeLabel = {delete:'Verwijderen', access:'Inzage', both:'Inzage + verwijderen'};
+
+  function render(){
+    const list = load(), tb = $('tracker');
+    if (!list.length){ tb.innerHTML = '<tr><td colspan="6" class="small">Nog geen verzoeken. Maak er een in stap 3.</td></tr>'; return; }
+    tb.innerHTML = '';
+    const now = new Date();
+    list.forEach((r, i) => {
+      const sent = new Date(r.sent), due = new Date(sent); due.setMonth(due.getMonth() + 1);
+      const late = r.status === 'Wacht op antwoord' && now > due;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td></td><td>${typeLabel[r.type]}</td><td>${sent.toLocaleDateString('nl-NL')}</td>
+        <td class="${late ? 'late' : ''}">${due.toLocaleDateString('nl-NL')}${late ? ' (verlopen)' : ''}</td>
+        <td><select data-i="${i}" class="st"><option>Wacht op antwoord</option><option>Afgerond</option><option>Geweigerd</option><option>Klacht ingediend</option></select></td>
+        <td><button data-i="${i}" class="del btn secondary" style="margin:0">Wis</button></td>`;
+      tr.firstChild.textContent = r.company;
+      tr.querySelector('select').value = r.status;
+      tb.appendChild(tr);
+    });
+    tb.querySelectorAll('.st').forEach(s => s.addEventListener('change', e => { const l = load(); l[e.target.dataset.i].status = e.target.value; save(l); render(); }));
+    tb.querySelectorAll('.del').forEach(b => b.addEventListener('click', e => { const l = load(); l.splice(e.target.dataset.i, 1); save(l); render(); }));
+  }
+
+  $('track-letter').addEventListener('click', () => {
+    const l = load();
+    l.push({company: val('r-company') || 'Onbekend bedrijf', type: $('r-type').value, sent: new Date().toISOString(), status: 'Wacht op antwoord'});
+    save(l); render(); show(4);
+  });
+  render();
+})();
+</script>
+</body>
+</html>
