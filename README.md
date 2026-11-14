@@ -18,12 +18,16 @@ Door de vele datalekken en hacks liggen persoonsgegevens steeds vaker op straat.
 3. **Schrijf je verzoek** – genereert een AVG-brief voor inzage (art. 15) en/of verwijdering (art. 17), klaar om te kopiëren of te mailen.
 4. **Volg je verzoeken** – houdt bij wanneer je iets hebt verstuurd en markeert verzoeken waarvan de wettelijke termijn van één maand is verlopen.
 
-## Privacy by design
+## Privacy en beveiliging
 - Geen server, geen database, geen tracking, geen cookies.
-- Alle invoer blijft in de browser van de gebruiker. Het overzicht wordt alleen lokaal opgeslagen (`localStorage`).
+- Strikte Content Security Policy: alleen eigen code, geen verbindingen naar buiten.
+- Geen inline JavaScript of CSS; alle invoer wordt als tekst weergegeven (bescherming tegen XSS).
+- `no-referrer`, `noopener noreferrer` en clickjacking-bescherming.
+- Eén knop om alle opgeslagen gegevens uit de browser te wissen.
+- Details: [SECURITY.md](SECURITY.md)
 
 ## Techniek
-- HTML, CSS en JavaScript, zonder frameworks of externe libraries.
+- HTML, CSS en JavaScript in aparte bestanden (`index.html`, `style.css`, `app.js`), zonder frameworks of externe libraries.
 - Gehost via GitHub Pages.
 
 ## Wat ik hiervan heb geleerd
@@ -31,6 +35,7 @@ Door de vele datalekken en hacks liggen persoonsgegevens steeds vaker op straat.
 - Basis van webontwikkeling: HTML-structuur, responsive CSS, DOM-manipulatie in JavaScript.
 - Lokale opslag in de browser en foutafhandeling als die niet beschikbaar is.
 - De AVG vanuit gebruikersperspectief: inzage, verwijdering, termijnen en klachtroute.
+- Webbeveiliging: Content Security Policy, XSS voorkomen, clickjacking en referrer-beleid.
 
 ## Plannen
 - [ ] Lijst met veelgebruikte Nederlandse bedrijven en hun privacy-contactadres
