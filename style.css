@@ -59,3 +59,23 @@
   .hide-done .q.none{display:none}
   footer{max-width:880px;margin:0 auto;padding:0 1.25rem 3rem;color:var(--muted);font-size:.85rem}
   .nomargin{margin:0}
+  h3{font-size:1.1rem;margin:1.8rem 0 .2rem}
+  /* Stap 2: bekende bedrijven */
+  .bedrijf-tools{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem .9rem;margin:1rem 0 .4rem}
+  .bedrijf-tools input{flex:1;min-width:220px}
+  .bedrijf-tools .btn{margin:0}
+  .bq{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:.3rem .8rem;padding:.5rem 1rem;border-top:1px solid var(--line)}
+  .bq.on{background:var(--accent-2)}
+  .bq label{display:flex;flex-wrap:wrap;align-items:center;gap:.2rem .55rem;flex:1;min-width:200px;margin:0;font-weight:400;cursor:pointer}
+  .bq input[type=checkbox]{width:1.1rem;height:1.1rem;margin:0;flex:none;accent-color:var(--accent)}
+  .bq .dom{font-size:.8rem;color:var(--muted)}
+  .bacts{display:flex;align-items:center;gap:.8rem;font-size:.85rem;white-space:nowrap}
+  .linkbtn{background:none;border:0;padding:0;font:inherit;color:#a3261b;cursor:pointer;text-decoration:underline}
+  .align-end{display:flex;align-items:flex-end}
+  .align-end .btn{margin:0}
+  .batchbar{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:1rem;margin:1.2rem 0}
+  .letter-card .card-inner{padding:0 1rem 1rem}
+  .letter-card textarea{min-height:240px}
+  .letter-card.sent{border-color:var(--accent)}
+  .letter-card.sent summary .small{color:var(--accent);font-weight:600}
+  .btn:disabled{opacity:.6;cursor:default}

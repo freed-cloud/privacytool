@@ -21,9 +21,10 @@ Vergeet Mij werkt met persoonsgegevens. Daarom is de tool zo gebouwd dat er zo m
 
 Alleen in de `localStorage` van je eigen browser:
 - de status van je zoekopdrachten (Niets of Gevonden)
-- je lijst met verstuurde verzoeken
+- welke bedrijven je in stap 2 hebt aangevinkt, en bedrijfsnamen die je zelf hebt toegevoegd
+- je lijst met verstuurde verzoeken (bedrijf, soort verzoek, datum en status)
 
-Je naam, e-mailadres en telefoonnummer uit stap 1 worden niet bewaard. Ze staan wel in de adressen van de zoeklinks die je opent, en die komen in de geschiedenis van je browser. Gebruik eventueel een privévenster.
+Je naam, e-mailadres en telefoonnummer worden niet bewaard, en de brieven zelf ook niet. De links naar privacypagina's in stap 2 bevatten alleen de website of naam van het bedrijf, geen gegevens over jou. Ze staan wel in de adressen van de zoeklinks die je opent, en die komen in de geschiedenis van je browser. Gebruik eventueel een privévenster.
 
 ## Bekende beperkingen
 

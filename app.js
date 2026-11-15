@@ -211,7 +211,7 @@ if (window.top !== window.self) { document.documentElement.hidden = true; try { 
           inp.value = s.site || '';
           inp.oninput = () => { const x = loadScan(); x[item.url] = { ...(x[item.url] || {}), site: inp.value }; saveScan(x); };
           const go = document.createElement('button'); go.className = 'btn'; go.textContent = 'Maak verwijderverzoek';
-          go.onclick = () => { $('r-company').value = inp.value || ''; $('r-type').value = 'delete'; show(3); $('r-company').focus(); };
+          go.onclick = () => { $('r-company').value = inp.value || ''; $('r-type').value = 'delete'; show('brief'); $('r-company').focus(); };
           fb.append(inp, go);
           row.append(fb);
         }
@@ -288,12 +288,13 @@ if (window.top !== window.self) { document.documentElement.hidden = true; try { 
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'vergeet-mij-scan.txt'; a.click();
   });
 
-  // ---------- Stap 3: brief ----------
+  // ---------- Stap 4: brief ----------
   function today(){ return new Date().toLocaleDateString('nl-NL', {day:'numeric', month:'long', year:'numeric'}); }
 
-  function buildLetter(){
-    const type = $('r-type').value, company = val('r-company') || '[bedrijf]', name = val('r-name') || '[jouw naam]',
-          email = val('r-email') || '[jouw e-mailadres]', extra = val('r-extra');
+  // Eén brief maken; gebruikt door stap 2 (veel bedrijven tegelijk) en stap 4 (één bedrijf)
+  function letterFor(o){
+    const type = o.type, company = o.company || '[bedrijf]', name = o.name || '[jouw naam]',
+          email = o.email || '[jouw e-mailadres]', extra = o.extra;
     const subject = {
       delete: 'Verzoek tot verwijdering van persoonsgegevens (art. 17 AVG)',
       access: 'Verzoek om inzage in persoonsgegevens (art. 15 AVG)',
@@ -318,6 +319,9 @@ if (window.top !== window.self) { document.documentElement.hidden = true; try { 
       `Met vriendelijke groet,\n\n${name}\n${today()}`;
     return {subject, body};
   }
+  function buildLetter(){
+    return letterFor({ type: $('r-type').value, company: val('r-company'), name: val('r-name'), email: val('r-email'), extra: val('r-extra') });
+  }
 
   let current = null;
   $('make-letter').addEventListener('click', () => {
@@ -338,7 +342,7 @@ if (window.top !== window.self) { document.documentElement.hidden = true; try { 
     setTimeout(() => $('copy-letter').textContent = 'Kopieer', 2000);
   });
 
-  // ---------- Stap 4: tracker ----------
+  // ---------- Stap 5: tracker ----------
   const KEY = 'vergeetmij-verzoeken';
   let memory = [];
   function load(){ try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch(e){ $('storage-note').textContent = 'Opslaan lukt niet in deze browser; je overzicht verdwijnt als je de pagina sluit.'; return memory; } }
@@ -352,7 +356,7 @@ if (window.top !== window.self) { document.documentElement.hidden = true; try { 
     const items = load(), tb = $('tracker');
     tb.replaceChildren();
     if (!Array.isArray(items) || !items.length){
-      const tr = document.createElement('tr'); const td = cell(tr, 'Nog geen verzoeken. Maak er een in stap 3.', 'small'); td.colSpan = 6; tb.appendChild(tr); return;
+      const tr = document.createElement('tr'); const td = cell(tr, 'Nog geen verzoeken. Maak ze in stap 2 of 4.', 'small'); td.colSpan = 6; tb.appendChild(tr); return;
     }
     const now = new Date();
     items.forEach((r, i) => {
@@ -378,14 +382,222 @@ if (window.top !== window.self) { document.documentElement.hidden = true; try { 
     });
   }
 
+  // ---------- Stap 2: bekende bedrijven ----------
+  // Bewaard in deze browser: alleen welke bedrijven zijn aangevinkt en zelf toegevoegde bedrijfsnamen.
+  // Naam, e-mailadres en de brieven zelf worden niet bewaard.
+  const BKEY = 'vergeetmij-bedrijven';
+  let bMem = { selected: [], custom: [] };
+  const strs = (a, max, len) => Array.isArray(a) ? a.filter(s => typeof s === 'string').map(s => s.slice(0, len)).slice(0, max) : [];
+  function loadB() {
+    try {
+      const x = JSON.parse(localStorage.getItem(BKEY));
+      if (x && typeof x === 'object') return { selected: strs(x.selected, 1000, 120), custom: strs(x.custom, 200, 80) };
+    } catch (e) {}
+    return { selected: [...bMem.selected], custom: [...bMem.custom] };
+  }
+  function saveB(x) { bMem = x; try { localStorage.setItem(BKEY, JSON.stringify(x)); } catch (e) {} }
+
+  const CATALOG = (Array.isArray(window.VERGEETMIJ_BEDRIJVEN) ? window.VERGEETMIJ_BEDRIJVEN : []).map(g => ({
+    cat: g.cat, note: g.note || '', items: g.items.map(([name, domain]) => ({ id: domain, name, domain }))
+  }));
+  const OWN = 'Zelf toegevoegd';
+  const customItem = n => ({ id: 'eigen:' + n.toLowerCase(), name: n, domain: '', custom: true });
+  const bGroups = st => st.custom.length ? [{ cat: OWN, note: '', items: st.custom.map(customItem) }, ...CATALOG] : CATALOG;
+  const shortName = n => n.replace(/\s*\(.*\)\s*$/, '');
+  const norm = s => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+  const privacyUrl = i => i.domain ? ENGINES.Google(`privacy site:${i.domain}`) : ENGINES.Google(`privacyverklaring "${i.name}"`);
+  const newLink = (url, text) => { const a = document.createElement('a'); a.href = url; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.textContent = text; return a; };
+
+  const openCats = new Set();
+  let bView = [];
+
+  function renderB() {
+    const st = loadB(), sel = new Set(st.selected), q = norm($('b-filter').value.trim());
+    const box = $('b-groups');
+    box.replaceChildren();
+    bView = [];
+    bGroups(st).forEach(g => {
+      const items = q ? g.items.filter(i => norm(i.name + ' ' + i.domain).includes(q)) : g.items;
+      if (!items.length) return;
+      const det = document.createElement('details');
+      det.className = 'group';
+      det.open = !!q || openCats.has(g.cat);
+      det.addEventListener('toggle', () => { if (!q) { if (det.open) openCats.add(g.cat); else openCats.delete(g.cat); } });
+      const sum = document.createElement('summary');
+      const t = document.createElement('span'); t.textContent = g.cat;
+      const c = document.createElement('span'); c.className = 'small';
+      sum.append(t, c);
+      det.append(sum);
+      if (g.note) { const p = document.createElement('p'); p.className = 'gdesc'; p.textContent = g.note; det.append(p); }
+      items.forEach(i => {
+        const row = document.createElement('div');
+        row.className = 'bq' + (sel.has(i.id) ? ' on' : '');
+        const lab = document.createElement('label');
+        const cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = sel.has(i.id);
+        cb.addEventListener('change', () => {
+          const s = loadB(), set = new Set(s.selected);
+          if (cb.checked) set.add(i.id); else set.delete(i.id);
+          s.selected = [...set]; saveB(s);
+          row.classList.toggle('on', cb.checked);
+          updateBCounts();
+        });
+        const nm = document.createElement('span'); nm.textContent = i.name;
+        lab.append(cb, nm);
+        if (i.domain) { const dm = document.createElement('span'); dm.className = 'dom'; dm.textContent = i.domain; lab.append(dm); }
+        const acts = document.createElement('div'); acts.className = 'bacts';
+        acts.append(newLink(privacyUrl(i), 'Privacypagina ↗'));
+        if (i.custom) {
+          const x = document.createElement('button'); x.type = 'button'; x.className = 'linkbtn'; x.textContent = 'Verwijder';
+          x.addEventListener('click', () => {
+            const s = loadB();
+            s.custom = s.custom.filter(n => n.toLowerCase() !== i.name.toLowerCase());
+            s.selected = s.selected.filter(id => id !== i.id);
+            saveB(s); renderB();
+          });
+          acts.append(x);
+        }
+        row.append(lab, acts);
+        det.append(row);
+      });
+      box.append(det);
+      bView.push({ ids: g.items.map(i => i.id), small: c });
+    });
+    if (!box.children.length) { const p = document.createElement('p'); p.className = 'small'; p.textContent = 'Geen bedrijf gevonden. Voeg het hieronder zelf toe.'; box.append(p); }
+    updateBCounts();
+  }
+
+  function updateBCounts() {
+    const st = loadB(), sel = new Set(st.selected);
+    const valid = new Set(bGroups(st).flatMap(g => g.items.map(i => i.id)));
+    $('b-count').textContent = st.selected.filter(id => valid.has(id)).length;
+    bView.forEach(v => {
+      const n = v.ids.filter(id => sel.has(id)).length;
+      v.small.textContent = n ? `${n} van ${v.ids.length} aangevinkt` : `${v.ids.length} bedrijven`;
+    });
+  }
+
+  $('b-filter').addEventListener('input', renderB);
+  $('b-clear').addEventListener('click', () => { const s = loadB(); s.selected = []; saveB(s); renderB(); });
+
+  function addCustom() {
+    const n = $('b-custom').value.replace(/[\u0000-\u001f\u007f]/g, '').trim().slice(0, 80);
+    if (!n) return;
+    const s = loadB();
+    if (!s.custom.some(x => x.toLowerCase() === n.toLowerCase())) s.custom.unshift(n);
+    const id = customItem(n).id;
+    if (!s.selected.includes(id)) s.selected.push(id);
+    saveB(s);
+    $('b-custom').value = '';
+    openCats.add(OWN);
+    renderB();
+  }
+  $('b-add').addEventListener('click', addCustom);
+  $('b-custom').addEventListener('keydown', e => { if (e.key === 'Enter') addCustom(); });
+
+  // Alle brieven in één keer maken
+  let batch = [];
+  function bMsg(text) { $('b-msg').textContent = text; $('b-msg').hidden = !text; }
+
+  $('b-make').addEventListener('click', () => {
+    const st = loadB(), sel = new Set(st.selected);
+    const chosen = bGroups(st).flatMap(g => g.items).filter(i => sel.has(i.id));
+    if (!chosen.length) { bMsg('Vink eerst minimaal één bedrijf aan.'); return; }
+    const base = { type: $('b-type').value, name: val('b-name'), email: val('b-email'), extra: val('b-extra') };
+    bMsg(base.name && base.email ? '' : 'Let op: vul je naam en e-mailadres in, anders staan er nog [haakjes] in de brieven.');
+    batch = chosen.map(i => {
+      const company = shortName(i.name);
+      return { item: i, company, type: base.type, letter: letterFor({ ...base, company }), to: '', sent: false };
+    });
+    renderLetters();
+    $('b-out').hidden = false;
+    $('b-out').scrollIntoView({ behavior: 'smooth' });
+  });
+
+  function renderLetters() {
+    const box = $('b-letters');
+    box.replaceChildren();
+    batch.forEach((b, idx) => {
+      const det = document.createElement('details');
+      det.className = 'group letter-card' + (b.sent ? ' sent' : '');
+      if (idx === 0) det.open = true;
+      const sum = document.createElement('summary');
+      const t = document.createElement('span'); t.textContent = b.company;
+      const s = document.createElement('span'); s.className = 'small'; s.textContent = b.sent ? 'Verstuurd ✓' : 'Nog versturen';
+      sum.append(t, s);
+
+      const inner = document.createElement('div'); inner.className = 'card-inner';
+      const p = document.createElement('p'); p.className = 'small';
+      p.append('1. ', newLink(privacyUrl(b.item), `Open de privacypagina van ${b.company} ↗`), ' en zoek het e-mailadres of formulier van de privacy-afdeling.');
+      const lt = document.createElement('label'); lt.htmlFor = `b-to-${idx}`;
+      lt.textContent = '2. E-mailadres privacy-afdeling (gebruikt het bedrijf een formulier, kopieer dan de brief en plak hem daarin)';
+      const to = document.createElement('input'); to.id = `b-to-${idx}`; to.type = 'email'; to.maxLength = 120; to.placeholder = 'privacy@bedrijf.nl'; to.value = b.to;
+      const ll = document.createElement('label'); ll.htmlFor = `b-letter-${idx}`; ll.textContent = '3. Je brief (je kunt hem nog aanpassen)';
+      const ta = document.createElement('textarea'); ta.id = `b-letter-${idx}`; ta.value = 'Onderwerp: ' + b.letter.subject + '\n\n' + b.letter.body;
+      const copy = document.createElement('button'); copy.type = 'button'; copy.className = 'btn'; copy.textContent = 'Kopieer';
+      const mail = document.createElement('a'); mail.className = 'btn secondary'; mail.textContent = 'Open in mailprogramma';
+      const done = document.createElement('button'); done.type = 'button'; done.className = 'btn secondary';
+      const setDone = () => { done.textContent = b.sent ? 'In je overzicht ✓' : 'Verstuurd, zet in overzicht'; done.disabled = b.sent; };
+      setDone();
+
+      const upd = () => {
+        b.to = to.value.trim();
+        const m = ta.value.match(/^Onderwerp:[ \t]*(.*)\n/);
+        const subject = m ? m[1] : b.letter.subject;
+        const text = ta.value.replace(/^Onderwerp:.*\n\n?/, '');
+        mail.href = 'mailto:' + encodeURIComponent(b.to) + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(text);
+      };
+      to.addEventListener('input', upd);
+      ta.addEventListener('input', upd);
+      upd();
+
+      copy.addEventListener('click', async () => {
+        try { await navigator.clipboard.writeText(ta.value); } catch (e) { ta.select(); document.execCommand('copy'); }
+        copy.textContent = 'Gekopieerd ✓';
+        setTimeout(() => { copy.textContent = 'Kopieer'; }, 2000);
+      });
+      done.addEventListener('click', () => {
+        if (b.sent) return;
+        const l = load(), list = Array.isArray(l) ? l : [];
+        list.push({ company: b.company, type: b.type, sent: new Date().toISOString(), status: STATUSES[0] });
+        save(list); render();
+        b.sent = true; setDone();
+        det.classList.add('sent'); s.textContent = 'Verstuurd ✓';
+        updateBatchCounts();
+      });
+
+      inner.append(p, lt, to, ll, ta, copy, mail, done);
+      det.append(sum, inner);
+      box.append(det);
+    });
+    updateBatchCounts();
+  }
+  function updateBatchCounts() {
+    $('b-made').textContent = batch.length;
+    $('b-sent').textContent = batch.filter(b => b.sent).length;
+  }
+
+  $('b-download').addEventListener('click', () => {
+    const lines = ['Vergeet Mij: AVG-verzoeken', new Date().toLocaleString('nl-NL'), ''];
+    batch.forEach((b, i) => {
+      const ta = $(`b-letter-${i}`);
+      lines.push('==================================================', b.company, 'Privacypagina zoeken: ' + privacyUrl(b.item));
+      if (b.to) lines.push('E-mailadres privacy-afdeling: ' + b.to);
+      lines.push('', ta ? ta.value : 'Onderwerp: ' + b.letter.subject + '\n\n' + b.letter.body, '');
+    });
+    const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'vergeet-mij-verzoeken.txt'; a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  });
+
   // Alles wissen wat deze tool in de browser bewaart
   $('wipe-all').addEventListener('click', () => {
     if (!confirmWipe.armed) { confirmWipe.armed = true; $('wipe-all').textContent = 'Weet je het zeker? Klik nogmaals'; setTimeout(() => { confirmWipe.armed = false; $('wipe-all').textContent = 'Wis al mijn gegevens uit deze browser'; }, 4000); return; }
-    try { localStorage.removeItem(KEY); localStorage.removeItem(SKEY); } catch (e) {}
-    memory = []; scanMem = {};
+    try { localStorage.removeItem(KEY); localStorage.removeItem(SKEY); localStorage.removeItem(BKEY); } catch (e) {}
+    memory = []; scanMem = {}; bMem = { selected: [], custom: [] }; batch = [];
     document.querySelectorAll('input, textarea').forEach(el => { if (el.type === 'checkbox') el.checked = false; else el.value = ''; });
     currentGroups = []; $('scan').hidden = true; $('letter-box').hidden = true;
-    render(); confirmWipe.armed = false;
+    $('b-out').hidden = true; $('b-letters').replaceChildren(); bMsg(''); openCats.clear();
+    render(); renderB(); confirmWipe.armed = false;
     $('wipe-all').textContent = 'Alles is gewist ✓';
   });
   const confirmWipe = { armed: false };
@@ -393,7 +605,8 @@ if (window.top !== window.self) { document.documentElement.hidden = true; try { 
   $('track-letter').addEventListener('click', () => {
     const l = load();
     l.push({company: val('r-company') || 'Onbekend bedrijf', type: $('r-type').value, sent: new Date().toISOString(), status: 'Wacht op antwoord'});
-    save(l); render(); show(4);
+    save(l); render(); show('volg');
   });
   render();
+  renderB();
 })();
